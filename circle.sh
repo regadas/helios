@@ -11,7 +11,7 @@ case "$1" in
     fi
 
     # have docker bind to localhost
-    docker_opts='DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375"'
+    docker_opts='DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 --registry-mirror=http://localhost:5000"'
     sudo sh -c "echo '$docker_opts' >> /etc/default/docker"
 
     cat /etc/default/docker
@@ -30,6 +30,8 @@ case "$1" in
   dependencies)
     mvn clean install -T 2 -Dmaven.javadoc.skip=true -DskipTests=true -B -V
 
+    docker pull registry:2
+
     ;;
 
   pre_test)
@@ -39,6 +41,21 @@ case "$1" in
     ;;
 
   test)
+    set +x
+    docker run -d -p 5000:5000 \
+      -e STANDALONE=false \
+      -e MIRROR_SOURCE=https://registry-1.docker.io \
+      -e MIRROR_SOURCE_INDEX=https://index.docker.io \
+      -e STORAGE_PATH=/registry \
+      -e AWS_KEY=$AWS_KEY \
+      -e AWS_SECRET=$AWS_SECRET \
+      -e AWS_REGION=us-east-1 \
+      -e AWS_BUCKET=spotify-docker-images \
+      -e SETTINGS_FLAVOR=s3 \
+      --name=registry \
+      registry:2
+    set -x
+
     case $CIRCLE_NODE_INDEX in
       0)
         # run all tests *except* helios-system-tests
@@ -95,6 +112,8 @@ case "$1" in
         ;;
 
     esac
+
+    docker logs registry &> $CIRCLE_ARTIFACTS/registry.log
 
     ;;
 
