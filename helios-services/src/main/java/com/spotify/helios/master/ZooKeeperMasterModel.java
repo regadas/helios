@@ -1603,6 +1603,7 @@ public class ZooKeeperMasterModel implements MasterModel {
                                                        final String token)
       throws JobDoesNotExistException, JobAlreadyDeployedException, HostNotFoundException,
              JobPortAllocationConflictException, TokenVerificationException {
+    assertHostExists(client, host);
     final JobId id = deployment.getJobId();
     final Job job = getJob(id);
 
