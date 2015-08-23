@@ -21,8 +21,12 @@
 
 package com.spotify.helios.common.descriptors;
 
+import com.google.common.base.Optional;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
@@ -63,23 +67,26 @@ public class RolloutOptions {
 
   public static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toSeconds(5);
   public static final int DEFAULT_PARALLELISM = 1;
+  public static final float DEFAULT_FAILURE_THRESHOLD_PERCENTAGE = 0;
 
   private final long timeout;
   private final int parallelism;
   private final boolean migrate;
   private final boolean overlap;
-  private final String token;
+  private final float failureThreshold;
 
-  public RolloutOptions(@JsonProperty("timeout") final long timeout,
-                        @JsonProperty("parallelism") final int parallelism,
-                        @JsonProperty("migrate") final boolean migrate,
-                        @JsonProperty("overlap") boolean overlap,
-                        @JsonProperty("token") String token) {
+  public RolloutOptions(
+      @JsonProperty("timeout") final long timeout,
+      @JsonProperty("parallelism") final int parallelism,
+      @JsonProperty("migrate") final boolean migrate,
+      @JsonProperty("overlap") boolean overlap,
+      @JsonProperty("failureThreshold") @Nullable final Float failureThreshold) {
     this.timeout = timeout;
     this.parallelism = parallelism;
     this.migrate = migrate;
     this.overlap = overlap;
-    this.token = token;
+    this.failureThreshold = Optional.fromNullable(failureThreshold).or(
+        DEFAULT_FAILURE_THRESHOLD_PERCENTAGE);
   }
 
   public static Builder newBuilder() {
@@ -91,7 +98,7 @@ public class RolloutOptions {
         .setTimeout(timeout)
         .setParallelism(parallelism)
         .setMigrate(migrate)
-        .setToken(token);
+        .setFailureThreshold(failureThreshold);
   }
 
   public long getTimeout() {
@@ -110,8 +117,8 @@ public class RolloutOptions {
     return overlap;
   }
 
-  public String getToken() {
-    return token;
+  public float getFailureThreshold() {
+    return failureThreshold;
   }
 
   @Override
@@ -137,7 +144,7 @@ public class RolloutOptions {
     if (overlap != that.overlap) {
       return false;
     }
-    if (token != null ? !token.equals(that.token) : that.token != null) {
+    if (failureThreshold != that.failureThreshold) {
       return false;
     }
 
@@ -150,7 +157,7 @@ public class RolloutOptions {
     result = 31 * result + parallelism;
     result = 31 * result + (migrate ? 1 : 0);
     result = 31 * result + (overlap ? 1 : 0);
-    result = 31 * result + (token != null ? token.hashCode() : 0);
+    result = (int) (31 * result + failureThreshold);
     return result;
   }
 
@@ -161,7 +168,7 @@ public class RolloutOptions {
            ", parallelism=" + parallelism +
            ", migrate=" + migrate +
            ", overlap=" + overlap +
-           ", token=" + token +
+           ", failure threshold=" + failureThreshold +
            '}';
   }
 
@@ -171,14 +178,14 @@ public class RolloutOptions {
     private int parallelism;
     private boolean migrate;
     private boolean overlap;
-    private String token;
+    private Float failureThreshold;
 
     public Builder() {
       this.timeout = DEFAULT_TIMEOUT;
       this.parallelism = DEFAULT_PARALLELISM;
       this.migrate = false;
       this.overlap = false;
-      this.token = EMPTY_TOKEN;
+      this.failureThreshold = DEFAULT_FAILURE_THRESHOLD_PERCENTAGE;
     }
 
 
@@ -202,13 +209,13 @@ public class RolloutOptions {
       return this;
     }
 
-    public Builder setToken(final String token) {
-      this.token = token;
+    public Builder setFailureThreshold(final Float failureThreshold) {
+      this.failureThreshold = failureThreshold;
       return this;
     }
 
     public RolloutOptions build() {
-      return new RolloutOptions(timeout, parallelism, migrate, overlap, token);
+      return new RolloutOptions(timeout, parallelism, migrate, overlap, failureThreshold);
     }
   }
 }
