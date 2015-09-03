@@ -100,7 +100,7 @@ public class DeploymentGroupTasks extends Descriptor {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(final Object o) {
     if (this == o) {
       return true;
     }
@@ -108,25 +108,28 @@ public class DeploymentGroupTasks extends Descriptor {
       return false;
     }
 
-    DeploymentGroupTasks that = (DeploymentGroupTasks) o;
+    final DeploymentGroupTasks that = (DeploymentGroupTasks) o;
 
     if (taskIndex != that.taskIndex) {
-      return false;
-    }
-    if (numTargets != that.numTargets) {
-      return false;
-    }
-    if (rolloutTasks != null ? !rolloutTasks.equals(that.rolloutTasks)
-                             : that.rolloutTasks != null) {
       return false;
     }
     if (deploymentGroup != null ? !deploymentGroup.equals(that.deploymentGroup)
                                 : that.deploymentGroup != null) {
       return false;
     }
-    return !(failedTargets != null ? !failedTargets.equals(that.failedTargets)
-                                   : that.failedTargets != null);
+    if (rolloutTasks != null ? !rolloutTasks.equals(that.rolloutTasks)
+                             : that.rolloutTasks != null) {
+      return false;
+    }
+    if (numTargets != that.numTargets) {
+      return false;
+    }
+    if (failedTargets != null ? !failedTargets.equals(that.failedTargets)
+                              : that.failedTargets != null) {
+      return false;
+    }
 
+    return true;
   }
 
   @Override
